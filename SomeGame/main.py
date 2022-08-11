@@ -1,8 +1,11 @@
 from PlayerClasses import *
+from Abilities import Ability
+import time
 
 
 class Player:
-    def __init__(self, player_class):
+    def __init__(self, name, player_class):
+        self.name = name
         self.player_class = player_class
 
         self.stats = {"strength": player_class.strength,
@@ -20,8 +23,12 @@ class Player:
 
         self.effects = []
 
-        self.abilities = {"basic": Abilities.basic_ability, "defensive": self.player_class.defence_ability}
-        self.abilities_cooldown = {"basic": 0, "defensive": 0}
+        self.abilities = [Ability("Basic Attack")]
+
+    def add_ability(self, ability):
+        if len(self.abilities) == 8:
+            return
+        self.abilities.append(Ability(ability))
 
     def add_effect(self, effect):
         self.effects.append(effect)
@@ -48,15 +55,19 @@ class Player:
         self.stats["current_hp"] = self.stats["max_hp"]
 
     def reduce_cooldowns(self):
-        for ability in self.abilities_cooldown.keys():
-            self.abilities_cooldown[ability] -= 1
-            self.abilities_cooldown[ability] = max(self.abilities_cooldown[ability], 0)
+        for ability in self.abilities:
+            ability.reduce_cooldown()
+
+    def is_dead(self):
+        return self.stats["current_hp"] <= 0
 
 
 class Match:
     def __init__(self, player1: Player, player2: Player):
         self.__player1 = player1
         self.__player2 = player2
+        self.turn = [self.__player1, self.__player2]
+        self.tp = int(random.random() < 0.5)
 
     def update_hp_shields(self):
         self.__player1.stats["shield"] = max(self.__player1.stats["shield"], 0)
@@ -69,80 +80,74 @@ class Match:
             " (" + str(self.__player1.stats["shield"]) + " shield)" if self.__player1.stats["shield"] > 0 else ""
         p2_shield = \
             " (" + str(self.__player2.stats["shield"]) + " shield)" if self.__player2.stats["shield"] > 0 else ""
-        print("Player 1: " +
+        print(self.__player1.name + ": " +
               str(self.__player1.stats["current_hp"]) + "/" + str(self.__player1.stats["max_hp"]) + p1_shield)
-        print("Player 2: " +
+        print(self.__player2.name + ": " +
               str(self.__player2.stats["current_hp"]) + "/" + str(self.__player2.stats["max_hp"]) + p2_shield)
         print()
 
     def print_effects(self):
         if len(self.__player1.effects) > 0:
-            print("Player 1 effects:")
+            print(self.__player1.name + " effects:")
             for effect in self.__player1.effects:
                 print("\t" + str(effect))
         if len(self.__player2.effects) > 0:
-            print("Player 2 effects:")
+            print(self.__player2.name + " effects:")
             for effect in self.__player2.effects:
                 print("\t" + str(effect))
         print()
 
-    def play(self):
+    def game_over(self):
+        return self.__player1.is_dead() or self.__player2.is_dead()
+
+    def winner(self):
+        if self.__player1.is_dead():
+            return self.__player2.name
+        return self.__player1.name
+
+    def play_round(self):
+        if self.turn[self.tp].abilities[1].active:
+            self.turn[self.tp], self.turn[int(not self.tp)], message = \
+                self.turn[self.tp].abilities[1].use(self.turn[self.tp], self.turn[int(not self.tp)])
+            m = ""
+            if message:
+                m = " ".join(message)
+            print(self.turn[self.tp].name + " used " + self.turn[self.tp].abilities[1].name + "." + m)
+        else:
+            self.turn[self.tp], self.turn[int(not self.tp)], message = \
+                self.turn[self.tp].abilities[0].use(self.turn[self.tp], self.turn[int(not self.tp)])
+            print(self.turn[self.tp].name + " used " + self.turn[self.tp].abilities[0].name +
+                  " and dealt " + message[1] + " damage." + message[0])
+
+        self.turn[self.tp].reduce_cooldowns()
+        self.turn[self.tp].apply_effects()
+
+        self.__player1 = self.turn[0]
+        self.__player2 = self.turn[1]
+
+        self.update_hp_shields()
+
+        self.print_effects()
         self.print_current_hp()
-        while self.__player1.stats["current_hp"] > 0 and self.__player2.stats["current_hp"] > 0:
-            if self.__player1.abilities_cooldown['defensive'] == 0:
-                name, self.__player1, self.__player2, cd, message = \
-                    self.__player1.abilities["defensive"](self.__player1, self.__player2)
-                self.__player1.abilities_cooldown['defensive'] = cd
-                m = ""
-                if message:
-                    m = " ".join(message)
-                print("Player 1 used " + name + "." + m)
-            else:
-                name, self.__player1, self.__player2, cd, message = \
-                    self.__player1.abilities["basic"](self.__player1, self.__player2)
-                self.__player1.abilities_cooldown['basic'] = cd
-                print("Player 1 used " + name + " and dealt " + message[1] + " damage." + message[0])
-                if self.__player2.stats["current_hp"] <= 0:
-                    break
+        print("-" * 20)
+        print()
 
-            self.__player1.reduce_cooldowns()
-            self.__player1.apply_effects()
-            self.update_hp_shields()
+        self.tp = int(not self.tp)
 
-            self.print_effects()
-            self.print_current_hp()
-            print()
+        time.sleep(5)
 
-            if self.__player2.abilities_cooldown['defensive'] == 0:
-                name, self.__player2, self.__player1, cd, message = \
-                    self.__player2.abilities["defensive"](self.__player2, self.__player1)
-                self.__player2.abilities_cooldown['defensive'] = cd
-                m = ""
-                if message:
-                    m = " ".join(message)
-                print("Player 2 used " + name + "." + m)
-            else:
-                name, self.__player2, self.__player1, cd, message = \
-                    self.__player2.abilities["basic"](self.__player2, self.__player1)
-                self.__player2.abilities_cooldown['basic'] = cd
-                print("Player 2 used " + name + " and dealt " + message[1] + " damage." + message[0])
-
-            self.__player2.reduce_cooldowns()
-            self.__player2.apply_effects()
-            self.update_hp_shields()
-
-            self.print_effects()
-            self.print_current_hp()
-            print("-" * 20)
-
-        if self.__player1.stats["current_hp"] <= 0:
-            print("Player 2 won!")
-        if self.__player2.stats["current_hp"] <= 0:
-            print("Player 1 won!")
+        if self.game_over():
+            print(self.winner() + " won")
 
 
 if __name__ == '__main__':
-    p1 = Player(Mage())
-    p2 = Player(Bruiser())
+    p1 = Player("Gregor", Mage())
+    p1.add_ability("Mana Shield")
+
+    p2 = Player("Billy", Bruiser())
+    p2.add_ability("Adrenaline")
+
     match = Match(p1, p2)
-    match.play()
+    match.print_current_hp()
+    while not match.game_over():
+        match.play_round()
