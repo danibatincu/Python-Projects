@@ -21,6 +21,8 @@ class Player:
         self.stats["max_hp"] = self.stats["vitality"] * 10
         self.stats["current_hp"] = self.stats["max_hp"]
 
+        self.buffs = []
+        self.debuffs = []
         self.effects = []
 
         self.abilities = [Ability("Basic Attack")]
@@ -31,18 +33,27 @@ class Player:
         self.abilities.append(Ability(ability))
 
     def add_effect(self, effect):
-        self.effects.append(effect)
+        if effect.buff:
+            self.buffs.append(effect)
+            return
+        self.debuffs.append(effect)
 
     def apply_effects(self):
-        new_effects = []
-        for effect in self.effects:
+        new_buffs = []
+        new_debuffs = []
+        for effect in self.buffs + self.debuffs:
             self.stats[effect.stat] = effect.apply(self)
             if effect.duration == 0:
                 if not effect.repeated:
                     self.stats[effect.stat] = effect.expire(self)
             if effect.duration > 0:
-                new_effects.append(effect)
-        self.effects = new_effects
+                if effect.buff:
+                    new_buffs.append(effect)
+                else:
+                    new_debuffs.append(effect)
+        self.buffs = new_buffs
+        self.debuffs = new_debuffs
+        self.effects = self.buffs + self.debuffs
 
     def take_damage(self, value):
         if value <= self.stats["shield"]:
@@ -68,6 +79,14 @@ class Match:
         self.__player2 = player2
         self.turn = [self.__player1, self.__player2]
         self.tp = int(random.random() < 0.5)
+
+    @property
+    def player1(self):
+        return self.__player1
+
+    @property
+    def player2(self):
+        return self.__player2
 
     def update_hp_shields(self):
         self.__player1.stats["shield"] = max(self.__player1.stats["shield"], 0)
@@ -134,15 +153,74 @@ class Match:
 
         self.tp = int(not self.tp)
 
-        time.sleep(5)
+        if self.game_over():
+            print(self.winner() + " won")
+
+        def play_round(self):
+            if self.turn[self.tp].abilities[1].active:
+                self.turn[self.tp], self.turn[int(not self.tp)], message = \
+                    self.turn[self.tp].abilities[1].use(self.turn[self.tp], self.turn[int(not self.tp)])
+                m = ""
+                if message:
+                    m = " ".join(message)
+                print(self.turn[self.tp].name + " used " + self.turn[self.tp].abilities[1].name + "." + m)
+            else:
+                self.turn[self.tp], self.turn[int(not self.tp)], message = \
+                    self.turn[self.tp].abilities[0].use(self.turn[self.tp], self.turn[int(not self.tp)])
+                print(self.turn[self.tp].name + " used " + self.turn[self.tp].abilities[0].name +
+                      " and dealt " + message[1] + " damage." + message[0])
+
+            self.turn[self.tp].reduce_cooldowns()
+            self.turn[self.tp].apply_effects()
+
+            self.__player1 = self.turn[0]
+            self.__player2 = self.turn[1]
+
+            self.update_hp_shields()
+
+            self.print_effects()
+            self.print_current_hp()
+            print("-" * 20)
+            print()
+
+            self.tp = int(not self.tp)
+
+            if self.game_over():
+                print(self.winner() + " won")
+
+    def play_round_manual(self, ability_code):
+        self.turn[self.tp], self.turn[int(not self.tp)], message = \
+            self.turn[self.tp].abilities[ability_code].use(self.turn[self.tp], self.turn[int(not self.tp)])
+        m = ""
+        if message:
+            m = " ".join(message)
+
+        print(self.turn[self.tp].name + " used " + self.turn[self.tp].abilities[ability_code].name + "." + m)
+
+        self.turn[self.tp].reduce_cooldowns()
+        self.turn[self.tp].apply_effects()
+
+        self.__player1 = self.turn[0]
+        self.__player2 = self.turn[1]
+
+        self.update_hp_shields()
+
+        self.print_effects()
+        self.print_current_hp()
+        print("-" * 20)
+        print()
+
+        self.tp = int(not self.tp)
 
         if self.game_over():
             print(self.winner() + " won")
 
+        return m
+
 
 if __name__ == '__main__':
-    p1 = Player("Gregor", Mage())
-    p1.add_ability("Mana Shield")
+    p1 = Player("Alfred", Priest())
+    p1.add_ability("Heal")
 
     p2 = Player("Billy", Bruiser())
     p2.add_ability("Adrenaline")
@@ -150,4 +228,5 @@ if __name__ == '__main__':
     match = Match(p1, p2)
     match.print_current_hp()
     while not match.game_over():
-        match.play_round()
+        match.play_round_manual(0)
+        time.sleep(5)

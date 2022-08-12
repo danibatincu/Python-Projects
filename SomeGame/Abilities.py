@@ -13,14 +13,14 @@ class Abilities:
         damage = source.stats["strength"] if source.player_class.type == "physical" else source.stats["intellect"]
         if random.random() < source.stats["crit_chance"] / 100:
             damage = damage * 2
-            message = " (Critical!)"
+            message = "(Critical!)"
         damage = int(damage * (100 - target.stats["physical_def"]) / 100) if source.player_class.type == "physical" \
             else int(damage * (100 - target.stats["magical_def"]) / 100)
         if random.random() < target.stats["avoidance"] / 100:
             damage = 0
-            message = " (Avoided!)"
+            message = "(Avoided!)"
         target.take_damage(damage)
-        return source, target, [message, str(damage)]
+        return source, target, ["-", message]
 
     """
     increases avoidance by 30%
@@ -68,7 +68,7 @@ class Abilities:
         message = " (+" + str(heal) + " health)"
         regen = Effect("Regenerate % max health", "current_hp", int(0.05 * source.stats["max_hp"]), 3, True)
         source.add_effect(regen)
-        return source, target, [message]
+        return source, target, ["+", message]
 
     """
     shields caster for 20% of max hp
@@ -96,13 +96,14 @@ ability_map = {"Basic Attack": ("Attack a target for 100% of your highest damagi
 
 
 class Effect:
-    def __init__(self, name, stat, value, duration, repeated):
+    def __init__(self, name, stat, value, duration, repeated, buff=True):
         self.name = name
         self.stat = stat
         self.value = value
         self.duration = duration
         self.repeated = repeated
         self.is_applied = False
+        self.buff = buff
 
     def apply(self, target):
         if self.repeated:
@@ -140,9 +141,7 @@ class Ability:
         return self.function(source, target)
 
     def reduce_cooldown(self):
-        if self.current_cooldown == 0:
-            self.active = True
-            return
         self.current_cooldown -= 1
-
-
+        if self.current_cooldown <= 0:
+            self.current_cooldown = 0
+            self.active = True
