@@ -79,10 +79,6 @@ class Assassin:
         self.__avoidance = 20
         self.type = "physical"
 
-    @staticmethod
-    def defence_ability(source, target):
-        return Abilities.vanish(source, target)
-
     @property
     def strength(self):
         return self.__strength
@@ -142,18 +138,14 @@ class Assassin:
 
 class Bruiser:
     def __init__(self):
-        self.__strength = 13
-        self.__vitality = 25
+        self.__strength = 12
+        self.__vitality = 22
         self.__intellect = 3
         self.__crit_chance = 5
         self.__physical_def = 10
         self.__magical_def = 10
         self.__avoidance = 10
         self.type = "physical"
-
-    @staticmethod
-    def defence_ability(source, target):
-        return Abilities.adrenaline(source, target)
 
     @property
     def strength(self):
@@ -215,17 +207,13 @@ class Bruiser:
 class Priest:
     def __init__(self):
         self.__strength = 2
-        self.__vitality = 20
+        self.__vitality = 18
         self.__intellect = 15
         self.__crit_chance = 5
         self.__physical_def = 0
         self.__magical_def = 0
         self.__avoidance = 10
         self.type = "magical"
-
-    @staticmethod
-    def defence_ability(source, target):
-        return Abilities.heal(source, target)
 
     @property
     def strength(self):
@@ -294,10 +282,6 @@ class Mage:
         self.__magical_def = 0
         self.__avoidance = 5
         self.type = "magical"
-
-    @staticmethod
-    def defence_ability(source, target):
-        return Abilities.mana_shield(source, target)
 
     @property
     def strength(self):

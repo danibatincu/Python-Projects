@@ -4,9 +4,11 @@ import time
 
 
 class Player:
-    def __init__(self, name, player_class):
+    def __init__(self, name, player_class, photo):
         self.name = name
         self.player_class = player_class
+
+        self.photo = photo
 
         self.stats = {"strength": player_class.strength,
                       "vitality": player_class.vitality,
@@ -16,7 +18,10 @@ class Player:
                       "magical_def": player_class.magical_def,
                       "avoidance": player_class.avoidance,
                       "shield": 0,
-                      "crit_resist": 0}
+                      "crit_resist": 0,
+                      "damage_modifier": 1,
+                      "incoming_damage_modifier": 1,
+                      "healing_modifier": 1}
 
         self.stats["max_hp"] = self.stats["vitality"] * 10
         self.stats["current_hp"] = self.stats["max_hp"]
@@ -60,6 +65,10 @@ class Player:
             self.stats["shield"] -= value
         else:
             value -= self.stats["shield"]
+            self.stats["shield"] = 0
+            for effect in self.buffs:
+                if effect.stat == "shield":
+                    effect.expire(self)
             self.stats["current_hp"] -= value
 
     def reset_current_hp(self):
@@ -191,11 +200,6 @@ class Match:
     def play_round_manual(self, ability_code):
         self.turn[self.tp], self.turn[int(not self.tp)], message = \
             self.turn[self.tp].abilities[ability_code].use(self.turn[self.tp], self.turn[int(not self.tp)])
-        m = ""
-        if message:
-            m = " ".join(message)
-
-        print(self.turn[self.tp].name + " used " + self.turn[self.tp].abilities[ability_code].name + "." + m)
 
         self.turn[self.tp].reduce_cooldowns()
         self.turn[self.tp].apply_effects()
@@ -215,7 +219,7 @@ class Match:
         if self.game_over():
             print(self.winner() + " won")
 
-        return m
+        return message
 
 
 if __name__ == '__main__':

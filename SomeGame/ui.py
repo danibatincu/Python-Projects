@@ -1,5 +1,7 @@
 import tkinter
 import tkinter.ttk
+from PIL import ImageTk, Image
+from PIL.Image import LANCZOS
 from main import *
 
 
@@ -61,7 +63,7 @@ class MatchUI:
     def __init__(self, player1, player2):
         self.root = tkinter.Tk()
         self.root.title('Match')
-        self.root.geometry('800x250+400+300')
+        self.root.geometry('800x400+400+300')
         self.root.resizable(False, False)
         self.img = tkinter.PhotoImage()
 
@@ -83,7 +85,7 @@ class MatchUI:
                 150, 12.5, justify=tkinter.CENTER, width=100,
                 text=str(self.p1.stats['current_hp']) + " / " + str(self.p1.stats['max_hp']),
                 font=("Arial", "11", "bold"), fill='white')
-        self.p1_hp_canvas.grid(column=0, row=1, padx=5, pady=5)
+        self.p1_hp_canvas.grid(column=0, row=2, padx=5, pady=5)
 
         # define the hp bar and text on top for player 2
         self.p2_hp_canvas = tkinter.Canvas(self.root, width=300, height=25, relief='flat')
@@ -95,11 +97,22 @@ class MatchUI:
                 150, 12.5, justify=tkinter.CENTER, width=100,
                 text=str(self.p2.stats['current_hp']) + " / " + str(self.p2.stats['max_hp']),
                 font=("Arial", "11", "bold"), fill='white')
-        self.p2_hp_canvas.grid(column=2, row=1, padx=5, pady=5)
+        self.p2_hp_canvas.grid(column=2, row=2, padx=5, pady=5)
 
         # create the ability bar for player 1
-        self.p1_ability_bar = tkinter.Frame(self.root, width=300, height=100, background="#cccccc")
-        self.p1_ability_bar.grid(row=0, column=0, sticky='e', padx=5)
+        self.p1_frame = tkinter.Frame(self.root, width=300, height=100, background="#dddddd")
+        self.p1_ability_bar = tkinter.Frame(self.p1_frame, width=150, height=100, background="#cccccc")
+        self.p1_frame.pack_propagate(False)
+
+        image1 = Image.open(self.match.player1.photo)
+        image1 = image1.resize((100, 100), LANCZOS)
+        photo1 = ImageTk.PhotoImage(image1)
+        self.player1_photo = tkinter.Label(self.p1_frame, image=photo1, width=100, height=100)
+
+        self.p1_frame.grid(row=0, column=0, sticky=tkinter.S, pady=(0, 5))
+        self.player1_photo.pack(side="left")
+        self.p1_ability_bar.pack(side="right")
+
         self.p1_ability_buttons = [
             tkinter.Button(self.p1_ability_bar, image=self.img, compound=tkinter.CENTER,
                            foreground="white",
@@ -115,8 +128,19 @@ class MatchUI:
             i += 1
 
         # create the ability bar for player 2
-        self.p2_ability_bar = tkinter.Frame(self.root, width=300, height=100, background="#cccccc")
-        self.p2_ability_bar.grid(row=0, column=2, sticky='w', padx=5)
+        self.p2_frame = tkinter.Frame(self.root, width=300, height=100, background="#dddddd")
+        self.p2_ability_bar = tkinter.Frame(self.p2_frame, width=150, height=100, background="#cccccc")
+        self.p2_frame.pack_propagate(False)
+
+        image2 = Image.open(self.match.player2.photo)
+        image2 = image2.resize((100, 100), LANCZOS)
+        photo2 = ImageTk.PhotoImage(image2)
+        self.player2_photo = tkinter.Label(self.p2_frame, image=photo2, width=100, height=100)
+
+        self.p2_frame.grid(row=0, column=2, sticky=tkinter.S, pady=(0, 5))
+        self.player2_photo.pack(side="right")
+        self.p2_ability_bar.pack(side="left")
+
         self.p2_ability_buttons = [
             tkinter.Button(self.p2_ability_bar, image=self.img, compound=tkinter.CENTER,
                            foreground="white",
@@ -131,8 +155,17 @@ class MatchUI:
             label.grid(row=i // 4, column=i % 4, padx=5, pady=5)
             i += 1
 
+        self.names_frame = tkinter.Frame(self.root, height=20, width=772)
+        self.p1_name = tkinter.Label(self.names_frame, text=self.match.player1.name, font=("Calibri", 12, "bold"))
+        self.p2_name = tkinter.Label(self.names_frame, text=self.match.player2.name, font=("Calibri", 12, "bold"))
+        self.names_frame.pack_propagate(False)
+
+        self.names_frame.grid(row=1, columnspan=3)
+        self.p1_name.pack(side=tkinter.LEFT, padx=10, anchor="nw")
+        self.p2_name.pack(side=tkinter.RIGHT, padx=10, anchor="ne")
+
         # create the ability description canvas with 2 Text items, a name and a description
-        self.desc_canvas = tkinter.Canvas(self.root, width=172, height=80, background='#cccccc')
+        self.desc_canvas = tkinter.Canvas(self.root, width=172, height=125, background='#cccccc')
         self.desc_canvas.grid(column=1, row=0)
         self.ability_name = self.desc_canvas.create_text(5, 5, text="", width=162, anchor="nw",
                                                          font=("Calibri", 10, "bold"))
@@ -143,35 +176,49 @@ class MatchUI:
 
         # an area between the 2 health bars that shows after every turn the health gained/lost
         self.hp_change_canvas = tkinter.Canvas(self.root, width=172, height=40, background='#cccccc')
-        self.hp_change_canvas.grid(column=1, row=1)
+        self.hp_change_canvas.grid(column=1, row=2)
         self.p1_hp_change_text = self.hp_change_canvas.create_text(12, 20, text="", width=162, anchor="w",
                                                                    font=("Calibri", 12, "normal"), fill="red")
         self.p2_hp_change_text = self.hp_change_canvas.create_text(162, 20, text="", width=162, anchor='e',
                                                                    font=("Calibri", 12, "normal"), fill="green")
 
         # a frame that contains the buffs of player 1, underneath the hp bar
-        self.p1_buff_frame = tkinter.Frame(self.root, background='#cccccc', width=300, height=26)
-        self.p1_buff_frame.grid(row=2, column=0)
+        self.p1_buff_frame = tkinter.Frame(self.root, background='#cccccc', width=300, height=35)
+        self.p1_buff_frame.grid(row=3, column=0)
         self.p1_buff_frame.pack_propagate(False)
         self.p1_buff_labels = []
 
         # a frame that contains the buffs of player 2, underneath the hp bar
-        self.p2_buff_frame = tkinter.Frame(self.root, background='#cccccc', width=300, height=26)
-        self.p2_buff_frame.grid(row=2, column=2)
+        self.p2_buff_frame = tkinter.Frame(self.root, background='#cccccc', width=300, height=35)
+        self.p2_buff_frame.grid(row=3, column=2)
         self.p2_buff_frame.pack_propagate(False)
         self.p2_buff_labels = []
 
         # a frame that contains the debuffs of player 1, underneath the buffs frame
-        self.p1_debuff_frame = tkinter.Frame(self.root, background='#cccccc', width=300, height=26)
-        self.p1_debuff_frame.grid(row=3, column=0)
+        self.p1_debuff_frame = tkinter.Frame(self.root, background='#cccccc', width=300, height=35)
+        self.p1_debuff_frame.grid(row=4, column=0)
         self.p1_debuff_frame.pack_propagate(False)
         self.p1_debuff_labels = []
 
         # a frame that contains the debuffs of player 2, underneath the buffs frame
-        self.p2_debuff_frame = tkinter.Frame(self.root, background='#cccccc', width=300, height=26)
-        self.p2_debuff_frame.grid(row=3, column=2)
+        self.p2_debuff_frame = tkinter.Frame(self.root, background='#cccccc', width=300, height=35)
+        self.p2_debuff_frame.grid(row=4, column=2)
         self.p2_debuff_frame.pack_propagate(False)
         self.p2_debuff_labels = []
+
+        self.history = tkinter.Frame(self.root, width=300, height=65, background='#cccccc')
+        self.history.grid(row=5, columnspan=3, padx=15, pady=15, ipady=15)
+
+        self.history_scrollbar = tkinter.Scrollbar(self.history, orient="vertical")
+        self.history_scrollbar.pack(side=tkinter.RIGHT, fill=tkinter.Y)
+
+        self.history_text = tkinter.Canvas(self.history, width=250, height=65, background='#cccccc')
+        self.history_text.pack(side=tkinter.LEFT, fill=tkinter.BOTH, expand=True)
+        self.history_text.config(yscrollcommand=self.history_scrollbar.set)
+        self.history_scrollbar.config(command=self.history_text.yview)
+        self.history_text.config(scrollregion=self.history_text.bbox("all"))
+
+        self.count = 10
 
         self.root.mainloop()
 
@@ -202,23 +249,32 @@ class MatchUI:
     '''
         called after every turn, changes the green hp bar and value in the hp change canvas for player 1
     '''
-    def update_player1_hp(self, current_hp, message=""):
+    def update_player1_hp(self, current_hp, current_shield, message=""):
         x0, y0, x1, y1 = self.p1_hp_canvas.coords(self.p1_green_bar)
         x1 -= 300 * min(1,
                         ((current_hp - self.match.player1.stats['current_hp']) / self.match.player1.stats['max_hp']))
         self.p1_hp_canvas.coords(self.p1_green_bar, x0, y0, x1, y1)
         hp_difference = current_hp - self.match.player1.stats['current_hp']
+        shield_difference = current_shield - self.match.player1.stats['shield']
         if hp_difference > 0:
             to_print = "-" + str(hp_difference)
             color = "red"
         elif hp_difference == 0:
+            print(str(shield_difference))
             to_print = str(abs(hp_difference))
-            color = "gray"
+            if shield_difference == 0:
+                color = "gray"
+            elif shield_difference > 0:
+                to_print = "-" + str(shield_difference)
+                color = "#26bfed"
+            else:
+                to_print = "+" + str(abs(shield_difference))
+                color = "#26bfed"
         else:
             to_print = "+" + str(abs(hp_difference))
             color = "green"
         to_print += " " + message
-        if hp_difference != 0 or message:
+        if hp_difference != 0 or shield_difference !=0 or message:
             self.hp_change_canvas.itemconfigure(self.p1_hp_change_text, text=to_print, fill=color)
         return x1
 
@@ -236,23 +292,31 @@ class MatchUI:
     '''
         called after every turn, changes the green hp bar and value in the hp change canvas for player 2
     '''
-    def update_player2_hp(self, current_hp, message=""):
+    def update_player2_hp(self, current_hp, current_shield, message=""):
         x0, y0, x1, y1 = self.p2_hp_canvas.coords(self.p2_green_bar)
         x0 += 300 * min(1,
                         ((current_hp - self.match.player2.stats['current_hp']) / self.match.player2.stats['max_hp']))
         self.p2_hp_canvas.coords(self.p2_green_bar, x0, y0, x1, y1)
         hp_difference = current_hp - self.match.player2.stats['current_hp']
+        shield_difference = current_shield - self.match.player2.stats['shield']
         if hp_difference > 0:
             to_print = "-" + str(hp_difference)
             color = "red"
         elif hp_difference == 0:
             to_print = str(abs(hp_difference))
-            color = "gray"
+            if shield_difference == 0:
+                color = "gray"
+            elif shield_difference > 0:
+                to_print = "-" + str(shield_difference)
+                color = "#26bfed"
+            else:
+                to_print = "+" + str(abs(shield_difference))
+                color = "#26bfed"
         else:
             to_print = "+" + str(abs(hp_difference))
             color = "green"
         to_print = message + " " + to_print
-        if hp_difference != 0 or message:
+        if hp_difference != 0 or shield_difference !=0 or message:
             self.hp_change_canvas.itemconfigure(self.p2_hp_change_text, text=to_print, fill=color)
         return x0
 
@@ -274,12 +338,13 @@ class MatchUI:
         for label in buff_labels:
             label.destroy()
         buff_labels = [
-            tkinter.Label(frame, image=self.img, compound=tkinter.CENTER, background='black', width=20,
-                          height=20) for _ in range(len(effects))]
+            tkinter.Label(frame, image=self.img, compound=tkinter.CENTER, background='black', width=25,
+                          height=25) for _ in range(len(effects))]
         i = 0
         for label in buff_labels:
             CreateToolTip(label, str(effects[i]))
-            label.pack(side=side, padx=3, pady=3, anchor=tkinter.N)
+            label.pack(side=side, padx=5, pady=5, anchor=tkinter.N)
+            label.configure(text=str(effects[i].duration), foreground="white")
             i += 1
         return buff_labels
 
@@ -338,6 +403,15 @@ class MatchUI:
             return
         p1_current_hp = self.match.player1.stats['current_hp']
         p2_current_hp = self.match.player2.stats['current_hp']
+        p1_current_shield = self.match.player1.stats['shield']
+        p2_current_shield = self.match.player2.stats['shield']
+
+        to_show = "-  " + self.match.turn[self.match.tp].name + " has used "
+        ability_to_show = self.match.turn[self.match.tp].abilities[slot].name
+        self.history_text.create_text(10, self.count, text=to_show + ability_to_show, anchor=tkinter.NW)
+        self.count += 20
+        self.history_text.config(scrollregion=self.history_text.bbox("all"))
+        self.history_text.yview_moveto(1)
 
         self.empty_hp_change_canvas()
         message = self.match.play_round_manual(slot)
@@ -345,25 +419,33 @@ class MatchUI:
 
         if self.match.tp:
             if not message:
-                split_message = ["", ""]
-                m = ""
+                m1 = ""
+                m2 = ""
             else:
-                split_message = message.split(" ")
-                m = split_message[1] if split_message[0] == "+" else ""
-            x1 = self.update_player1_hp(p1_current_hp, m)
+                split_message1 = message[0]
+                split_message2 = message[1] if len(message) == 2 else ["", ""]
+                m1 = split_message1[1] if split_message1[0] == "+" else ""
+                m1 = split_message2[1] if split_message2[0] == "+" else m1
+                m2 = split_message1[1] if split_message1[0] == "-" else ""
+                m2 = split_message2[1] if split_message2[0] == "-" else m2
+            x1 = self.update_player1_hp(p1_current_hp, p1_current_shield, m1)
             self.update_player1_shield(x1)
-            x0 = self.update_player2_hp(p2_current_hp, split_message[1])
+            x0 = self.update_player2_hp(p2_current_hp, p2_current_shield, m2)
             self.update_player2_shield(x0)
         else:
             if not message:
-                split_message = ["", ""]
-                m = ""
+                m1 = ""
+                m2 = ""
             else:
-                split_message = message.split(" ")
-                m = split_message[1] if split_message[0] == "+" else ""
-            x1 = self.update_player1_hp(p1_current_hp, split_message[1])
+                split_message1 = message[0]
+                split_message2 = message[1] if len(message) == 2 else ["", ""]
+                m1 = split_message1[1] if split_message1[0] == "+" else ""
+                m1 = split_message2[1] if split_message2[0] == "+" else m1
+                m2 = split_message1[1] if split_message1[0] == "-" else ""
+                m2 = split_message2[1] if split_message2[0] == "-" else m2
+            x1 = self.update_player1_hp(p1_current_hp, p1_current_shield, m2)
             self.update_player1_shield(x1)
-            x0 = self.update_player2_hp(p2_current_hp, m)
+            x0 = self.update_player2_hp(p2_current_hp, p2_current_shield, m1)
             self.update_player2_shield(x0)
 
         hp_to_show = str(self.p1.stats['current_hp']) + " / " + str(self.p1.stats['max_hp'])
@@ -394,10 +476,20 @@ class MatchUI:
 
 
 if __name__ == '__main__':
-    p1 = Player("GregorOP", Mage())
-    p1.add_ability("Mana Shield")
+    player_presets = {"Gregory": Player("Gregory", Assassin(), "./Portraits/gregory.png"),
+                      "Billy": Player("Billy", Bruiser(), "./Portraits/billy.png"),
+                      "Presto": Player("Presto", Priest(), "./Portraits/presto.png"),
+                      "Mez": Player("Mez", Mage(), "./Portraits/mez.png")}
+    player_presets["Gregory"].add_ability("Vanish")
+    player_presets["Gregory"].add_ability("Crippling Poison")
+    player_presets["Billy"].add_ability("Adrenaline")
+    player_presets["Billy"].add_ability("Aim")
+    player_presets["Presto"].add_ability("Heal")
+    player_presets["Presto"].add_ability("Curse of Weakness")
+    player_presets["Mez"].add_ability("Mana Shield")
+    player_presets["Mez"].add_ability("Life-stealing Firebolt")
 
-    p2 = Player("Billy", Bruiser())
-    p2.add_ability("Adrenaline")
-
+    sample = random.sample(list(player_presets.keys()), 2)
+    p1 = player_presets[sample[0]]
+    p2 = player_presets[sample[1]]
     ui = MatchUI(p1, p2)
