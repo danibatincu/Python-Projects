@@ -371,3 +371,4 @@ class Mage:
     @avoidance.setter
     def avoidance(self, a):
         self.__avoidance = a
+

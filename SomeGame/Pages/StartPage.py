@@ -1,21 +1,35 @@
-import tkinter
 import tkinter.ttk
+from utils import *
 
 
 class StartPage(tkinter.Frame):
     def __init__(self, parent, controller):
         tkinter.Frame.__init__(self, parent)
 
+        self.controller = controller
+
         label = tkinter.ttk.Label(self, text="SomeGame", font=("Calibri", 48, "bold"))
         label2 = tkinter.ttk.Label(self, text="GameSome", font=("Calibri", 48, "bold"))
 
         button1 = tkinter.Button(self, text="Match", font=("Calibri", 20, "bold"), width=20,
                                  command=lambda: controller.show_frame("MatchPage"))
-        button1.place(x=600, y=325, anchor=tkinter.CENTER)
+        button1.place(x=600, y=300, anchor=tkinter.CENTER)
 
-        button2 = tkinter.Button(self, text="Back", font=("Calibri", 20, "bold"), width=20,
+        inventory_button = tkinter.Button(self, text="Inventory", font=("Calibri", 20, "bold"), width=20,
+                                          command=lambda: controller.show_frame("InventoryPage"))
+        inventory_button.place(x=600, y=375, anchor=tkinter.CENTER)
+
+        button2 = tkinter.Button(self, text="Save Game", font=("Calibri", 20, "bold"), width=20,
+                                 command=lambda: self.save_game())
+        button2.place(x=600, y=450, anchor=tkinter.CENTER)
+
+        button3 = tkinter.Button(self, text="Delete Save", font=("Calibri", 20, "bold"), width=20,
+                                 command=lambda: self.delete_save())
+        button3.place(x=600, y=525, anchor=tkinter.CENTER)
+
+        button4 = tkinter.Button(self, text="Back", font=("Calibri", 20, "bold"), width=20,
                                  command=lambda: controller.show_frame("FirstPage"))
-        button2.place(x=600, y=400, anchor=tkinter.CENTER)
+        button4.place(x=600, y=600, anchor=tkinter.CENTER)
 
         frame_width = label.winfo_reqwidth()
         frame_height = label.winfo_reqheight()
@@ -40,6 +54,15 @@ class StartPage(tkinter.Frame):
         label2.bind("<Button-1>", self.clicked_for_drag)
         label2.bind("<B1-Motion>", self.drag)
         label2.bind("<ButtonRelease-1>", self.drop)
+
+    def save_game(self):
+        with open("./Saves/" + self.controller.save_name, "wb") as f:
+            pickle.dump(self.controller.p1, f)
+
+    def delete_save(self):
+        os.remove("./Saves/" + self.controller.save_name)
+        self.controller.save_name = None
+        self.controller.show_frame("FirstPage")
 
     def clicked_for_drag(self, event):
         self.current_old_x = event.widget.winfo_x()

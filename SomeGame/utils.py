@@ -1,8 +1,10 @@
 from Player.Player import *
 from Player.PlayerClasses import *
 import tkinter
+import os
 import random
 import pickle
+import copy
 
 
 class CreateToolTip(object):
@@ -17,6 +19,8 @@ class CreateToolTip(object):
         self.text = text
         self.widget.bind("<Enter>", self.enter, add='+')
         self.widget.bind("<Leave>", self.leave, add='+')
+        self.widget.bind("<B1-Motion>", self.leave, add="+")
+        self.widget.bind("<ButtonRelease-1>", self.enter, add='+')
         self.id = None
         self.tw = None
 
@@ -71,4 +75,13 @@ player_presets["Presto"].add_ability("Heal")
 player_presets["Presto"].add_ability("Curse of Weakness")
 player_presets["Mez"].add_ability("Mana Shield")
 player_presets["Mez"].add_ability("Life-stealing Firebolt")
+
+gear_presets = [Gear("Default helmet", "head", 1, {"strength": 1}, "./ItemPortraits/default_helmet.jpg"),
+                Gear("Default shoulder piece", "shoulder", 1, {"strength": 1}, "./ItemPortraits/default_shoulder.jpg"),
+                Gear("Default chest piece", "chest", 1, {"strength": 1}, "./ItemPortraits/default_chest.jpg"),
+                Gear("Default gloves", "hands", 1, {"strength": 1}, "./ItemPortraits/default_gloves.jpg"),
+                Gear("Default pants", "legs", 1, {"strength": 1}, "./ItemPortraits/default_legs.jpg"),
+                Gear("Default boots", "feet", 1, {"strength": 1}, "./ItemPortraits/default_boots.jpg"),
+                Gear("Default 1-handed sword", "main_hand", 1, {"strength": 1}, "./ItemPortraits/default_sword.jpg"),
+                Gear("Default 1-handed sword", "off_hand", 1, {"strength": 1}, "./ItemPortraits/default_sword.jpg")]
 

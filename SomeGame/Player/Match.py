@@ -130,14 +130,14 @@ class Match:
 
         self.update_hp_shields()
 
-        self.print_effects()
-        self.print_current_hp()
-        print("-" * 20)
-        print()
+        # self.print_effects()
+        # self.print_current_hp()
+        # print("-" * 20)
+        # print()
 
         self.tp = int(not self.tp)
 
-        if self.game_over():
-            print(self.winner() + " won")
+        # if self.game_over():
+        #   print(self.winner() + " won")
 
         return message

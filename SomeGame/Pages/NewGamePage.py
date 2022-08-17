@@ -1,7 +1,6 @@
-import tkinter
+import os
 import tkinter.ttk
-from Player.Player import *
-from Player.PlayerClasses import *
+from utils import *
 
 
 class NewGamePage(tkinter.Frame):
@@ -11,6 +10,10 @@ class NewGamePage(tkinter.Frame):
 
         label = tkinter.ttk.Label(self, text="Select a class", font=("Calibri", 48, "bold"))
         label.place(relx=0.5, rely=0.25, anchor=tkinter.CENTER)
+
+        back_button = tkinter.Button(self, text="Back", font=("Calibri", 20, "bold"), width=20,
+                                     command=lambda: controller.show_frame("FirstPage"))
+        back_button.place(relx=0.5, rely=0.85, anchor="center")
 
         self.canvas = tkinter.Canvas(self, width=label.winfo_reqwidth(), height=275, background="#cccccc")
         self.canvas.place(relx=0.52, y=360, anchor=tkinter.W)
@@ -45,5 +48,17 @@ class NewGamePage(tkinter.Frame):
         self.canvas.itemconfigure(self.text, text=text)
 
     def set_player(self, player_class):
-        self.controller.set_player(PlayableCharacter("Roger", player_class(), "./Portraits/roger.jpg"))
+        p = PlayableCharacter("Roger", player_class(), "./Portraits/roger.jpg")
+        self.controller.set_player(p)
+        self.create_save()
         self.controller.show_frame("StartPage")
+
+    def create_save(self):
+        if len(os.listdir("./Saves/")) == 0:
+            save_file = "0.pickle"
+        else:
+            print(os.listdir("./Saves/")[-1].split(".")[0])
+            save_file = str(int(os.listdir("./Saves/")[-1].split(".")[0][-1]) + 1) + ".pickle"
+        self.controller.set_save_file(save_file)
+        with open("./Saves/save" + save_file, "wb") as f:
+            pickle.dump(self.controller.p1, f)

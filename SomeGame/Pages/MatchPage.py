@@ -3,7 +3,7 @@ import tkinter.messagebox
 from PIL import ImageTk, Image
 from PIL.Image import LANCZOS
 from Player.Match import Match
-from utils import*
+from utils import *
 
 
 class MatchPage(tkinter.Frame):
@@ -452,6 +452,8 @@ class MatchPage(tkinter.Frame):
 
     def game_over(self):
         tkinter.messagebox.showinfo("Game over!", "Game over!")
+        gear = copy.deepcopy(random.choice(gear_presets))
+        self.controller.p1.add_to_inventory(gear)
         self.controller.show_frame("StartPage")
 
 

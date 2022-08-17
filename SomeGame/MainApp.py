@@ -1,4 +1,6 @@
 import copy
+
+from Pages.InventoryPage import InventoryPage
 from Pages.StartPage import StartPage
 from Pages.FirstPage import FirstPage
 from Pages.LoadGamePage import LoadGamePage
@@ -13,6 +15,8 @@ class MainApp(tkinter.Tk):
 
         self.p1 = None
         self.p2 = None
+
+        self.save_name = None
 
         self.title('Match')
         self.geometry('1200x650+170+100')
@@ -40,23 +44,26 @@ class MainApp(tkinter.Tk):
             frame = MatchPage(self.container, self, copy.deepcopy(self.p1), self.p2)
             self.frames["MatchPage"] = frame
             frame.grid(row=0, column=0, sticky="nsew")
+        if cont == "LoadGamePage":
+            frame = LoadGamePage(self.container, self)
+            self.frames["LoadGamePage"] = frame
+            frame.grid(row=0, column=0, sticky="nsew")
+        if cont == "InventoryPage":
+            frame = InventoryPage(self.container, self)
+            self.frames["InventoryPage"] = frame
+            frame.grid(row=0, column=0, sticky="nsew")
         self.frames[cont].tkraise()
 
     def set_player(self, player):
         self.p1 = player
 
+    def set_save_file(self, save_file):
+        self.save_name = save_file
+
+    def set_item_inv_slot(self, row, col, item):
+        self.p1.set_item_inv_slot(row, col, item)
+
 
 if __name__ == '__main__':
-
-    p1 = PlayableCharacter("Bulliette", Bruiser(), "./Portraits/billy.png")
-    p1.add_ability("Aim")
-    with open("./Saves/save1.pickle", "wb") as f:
-        pickle.dump(p1, f)
-
-    p2 = PlayableCharacter("Merlin", Mage(), "./Portraits/mez.png")
-    p2.add_ability("Life-stealing Firebolt")
-    with open("./Saves/save2.pickle", "wb") as f:
-        pickle.dump(p2, f)
-
     app = MainApp()
     app.mainloop()

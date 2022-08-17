@@ -94,7 +94,7 @@ class PlayableCharacter(Player):
                      "main_hand": None, "off_hand": None}
         self.add_ability(self.player_class.defense_ability())
         self.level = 1
-        print(self.level)
+        self.inventory = [[None for _ in range(8)] for _ in range(3)]
 
     def add_gear(self, slot, gear):
         if not gear or slot == gear.slot:
@@ -107,13 +107,29 @@ class PlayableCharacter(Player):
             return old_gear
         return None
 
+    def first_empty_slot(self):
+        for i in range(3):
+            for j in range(8):
+                if not self.inventory[i][j]:
+                    return i, j
+        return -1, -1
+
+    def add_to_inventory(self, gear):
+        row, col = self.first_empty_slot()
+        if row != -1:
+            self.inventory[row][col] = gear
+
+    def set_item_inv_slot(self, row, col, item):
+        self.inventory[row][col] = item
+
 
 class Gear:
-    def __init__(self, name, slot, level, stats):
+    def __init__(self, name, slot, level, stats, image):
         self.name = name
         self.slot = slot
         self.level = level
         self.stats = stats
+        self.image = image
 
     def apply_stats(self, player):
         for stat in self.stats.keys():
@@ -124,6 +140,12 @@ class Gear:
         for stat in self.stats.keys():
             player.stats[stat] -= self.stats[stat]
         return player.stats
+
+    def __str__(self):
+        st = self.name + "\n" + str(self.slot) + "\nLevel " + str(self.level) + "\n"
+        for stat in self.stats.keys():
+            st += "+ " + str(self.stats[stat]) + " " + stat + "\n"
+        return st[:-1]
 
 
 if __name__ == '__main__':
